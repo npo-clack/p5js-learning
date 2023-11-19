@@ -11,6 +11,10 @@ function setup() {
 
 }
 
-function draw() {
-
+function draw( ) {
+  stroke(255);
+  strokeWeight(5)
+  if (mouseIsPressed === true) {
+    line(mouseX, mouseY, pmouseX, pmouseY);
+  }
 }
