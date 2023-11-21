@@ -46,9 +46,9 @@ function init() {
     for (let j = 0; j < columns; j++) {
       // i行目j列目の要素をランダムに埋める
       // ただし端は死んだ状態にする
-      if(i === 0 || j === 0 || i === rows - 1 || j === columns - 1){
-        cells[i][j] = 'x'
-      }else {
+      if (i === 0 || j === 0 || i === rows - 1 || j === columns - 1) {
+        cells[i][j] = "x";
+      } else {
         cells[i][j] = randomDeadOrLive();
       }
     }
@@ -68,9 +68,7 @@ function init() {
       next[i][j] = "x";
     }
   }
-
 }
-
 
 function draw() {
   goNextGeneration();
@@ -91,7 +89,6 @@ function draw() {
 
 // 現在のcellsの値をもとに次の世代のcellsの値を決める
 function goNextGeneration() {
-  console.log('ij', cells[1][5])
   for (let i = 1; i < rows - 1; i++) {
     for (let j = 1; j < columns - 1; j++) {
       // 周囲のセルの条件をチェック
@@ -130,7 +127,6 @@ function goNextGeneration() {
         neighbors++;
       }
 
-
       // そのセルが死んでいたとする。そのセルに隣接するセルのうちちょうど３つが生きていれば、次の世代で、そのセルは誕生する。
       if (cells[i][j] === "x" && neighbors === 3) {
         next[i][j] = "o";
@@ -144,9 +140,8 @@ function goNextGeneration() {
       } else if (cells[i][j] === "o" && neighbors <= 1) {
         next[i][j] = "x";
       } else {
-        next[i][j] = cells[i][j]
-      } 
-
+        next[i][j] = cells[i][j];
+      }
     }
   }
 
@@ -156,7 +151,7 @@ function goNextGeneration() {
   // そこで値をコピーして渡す。structuredCloneはコピー関数。
   cells = structuredClone(next);
 
-  // コピーするかわりに参照を入れ替えるやり方もある
+  // コピーするかわりに参照を入れ替えるやり方もある。こちらの方が効率はよい。
   // let temp = cells;
   // next = temp;
   // next = cells;
