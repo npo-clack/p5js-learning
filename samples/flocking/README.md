@@ -8,8 +8,8 @@ https://en.wikipedia.org/wiki/Boids
 
 ## 必要スキル&知識
 
-- p5.js の基礎(setup, draw)
-- クラス
+- パーティクル(ベクトル)を事前に終わらせている前提
+- 
 
 事前にパーティクルをやった人のみが取り組めます。
 
@@ -17,7 +17,6 @@ https://en.wikipedia.org/wiki/Boids
 
 ルール 1: 分離
 separate() は近くの鳥との距離が近い場合に反発力を発生させ、個体同士を離れさせます。
-これらのメソッドは、群れの中での個体同士の相互作用をシミュレートします。
 
 ルール 2: 整列
 align() は近くの仲間の平均速度を計算し、それに合わせて速度を調整します。
@@ -27,20 +26,11 @@ cohesion() は近くの仲間の平均位置を求め、その位置に向かう
 
 ## Get Started
 
-### ステップ１ ready フォルダを開いて現在の状態を確認しましょう
-
-LivePreview で ready フォルダの`index.html`を開く。青い背景のキャンバスが作成されているのを確認しましょう。また`my-p5.js`を開いてソースコードを確認しましょう。
-
-チェックポイント
-
-- createCanvas(720, 400)で 720×400 のキャンバスを作成しています
-- background('#E0F4FF')でカラーコード#E0F4FF の背景色を指定してます
-
-### ステップ２ クラスで Boid を表現する
-
-クラスを触ったことのない人は先に JS におけるクラスの書き方を学んでください。
+### ステップ1 クラスで Boid を表現する
 
 Boid クラスを作成します。Boid クラスには初期位置を渡してを渡してインスタンス化します。
+また、最初から速度と加速度を持たせておきます。
+Boid の形は鳥型にしたいところですが、今回は簡単のため、とりあえ半径 16 の円形の形としておきます。
 
 ```js
 function setup() {
@@ -63,10 +53,11 @@ class Boid {
    * y: y座標
    */
   constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
+    // 半径
+    this.r = 16;
+    this.position = createVector(x, y);
+    this.velocity = createVector(0, 0);
+    this.acceleration = createVector(0, 0);
   }
 }
 ```
@@ -93,13 +84,13 @@ function setup() {
 function draw() {}
 ```
 
-Boid を描画します。Boid はとりあえ半径 30 の円形の形としておきます。
+Boid を描画します。
 
 ```js
 // 省略
 
 draw(){
-  circle(boid.position.x, boid.position.y, 30)
+  circle(boid.position.x, boid.position.y, boid.r)
 }
 ```
 
@@ -121,7 +112,7 @@ function(){
 }
 ```
 
-配列に要素を追加するには`boids.push(ようそ)`で可能です。
+配列に要素を追加するには`boids.push(要素)`で可能です。
 
 https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/push
 
@@ -152,7 +143,7 @@ function setup() {
 
 function draw() {
   for (let i = 0; i < boids.length; i++) {
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, boids[i].r);
   }
 }
 ```
@@ -163,41 +154,44 @@ function draw() {
 
 ### ステップ 3 Boid に動きを与える
 
-これは鳥の群れの飛行シュミレーションなので、動きがほしいですね。ということで Boid に速度を与えます。Boid クラスに以下のコードを追加しましょう。速度は一旦 x 方向に 50、y 方向に 50 にします。
+これは鳥の群れの飛行シュミレーションなので、動きがほしいですね。ということで Boid にランダムに速度を与えます。速度を初期化している式で` createVector(0, 0)`のかわりに`p5.Vector.random2D()`で置き換えます。これはp5jsが提供しているメソッドで0~1の値をとるランダムなx成分とy成分をもったベクトルを作成します。
 
 ```js
 // 省略
 
 class Boid {
   constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    // ここから追記
-    this.velocity = {
-      x: 50,
-      y: 50,
-    };
+    this.r = 16;
+    this.position = createVector(x, y);
+    this.velocity = p5.Vector.random2D();
+    this.acceleration = createVector(0, 0);
   }
 }
 ```
 
 そして、各フレームごとに、現在の Boid の位置(position)に速度(velocity)を加えます。
 
-速度とは、現実世界では、秒間でどれくらいの距離移動するのかを指します。アニメーションの世界では、秒ではなくフレームに置き換え、フレーム間でどれくらいのピクセル移動するのかを指します。フレームごとの更新は`draw()`が担っているので、`draw()`が実行されるごとに、position に velocity を足せば良いのです。
-
-といことで、`draw()`を更新します。
+Boidクラスに`update`というメソッドを定義して、そこで位置に速度を加算します。そしてこの`update`メソッドを`draw`関数から呼び出します。
 
 ```js
 function draw() {
   for (let i = 0; i < boids.length; i++) {
-    // 現在のpositionにvelocityを足す
-    // += になっていることに注意
-    boids[i].position.x += boids[i].velocity.x;
-    boids[i].position.y += boids[i].velocity.y;
+    boids[i].update();
 
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, boids[i].r;
+  }
+}
+
+class Boid {
+  constructor(x, y) {
+    this.r = 16;
+    this.position = createVector(x, y);
+    this.velocity = p5.Vector.random2D();
+    this.acceleration = createVector(0, 0);
+  }
+
+  update(){
+    this.position.add(this.velocity);
   }
 }
 ```
@@ -206,27 +200,7 @@ function draw() {
 
 ![鳥3羽を描画](/samples//flocking/boids-velocity.jpeg)
 
-かなりスピードが早いですね。もう少し速度を抑えましょう。
-
-```js
-// 省略
-
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    // ここから追記
-    this.velocity = {
-      x: 5,
-      y: 5,
-    };
-  }
-}
-```
-
-ちょうどよい速度になりました。ただ、前の描画が残って軌跡になってしまっています。`draw()`の最初に背景色で塗りつぶすことで前回の描画の残りを上塗りしてしまいましょう。
+前の描画が残って軌跡になってしまっています。`draw()`の最初に背景色で塗りつぶすことで前回の描画の残りを上塗りしてしまいましょう。
 
 ```js
 function draw() {
@@ -239,14 +213,14 @@ function draw() {
     boids[i].position.x += boids[i].velocity.x;
     boids[i].position.y += boids[i].velocity.y;
 
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, boids[i].r);
   }
 }
 ```
 
 ![鳥3羽が動く](/samples//flocking/boids-moving.gif)
 
-### ステップ 4 数を増やして、ランダム性を与える
+### ステップ 4 数を増やして、位置をランダムにする
 
 鳥の群れのシュミレーションなので、数を増やしましょう！ 鳥の数を 3 羽から 100 羽に増やしてみてください。とりあえず、すべての鳥を座標 x: 300 y: 300 で描画してください。
 
@@ -269,8 +243,7 @@ function setup() {
 
   // x: 300, y:300 の位置でBoidを初期化
   for (let i = 0; i < 100; i++) {
-    boids[i].position.x += boids[i].velocity.x;
-    boids[i].position.y += boids[i].velocity.y;
+    boids[i].update()
 
     boids.push(new Boid(300, 300));
   }
@@ -278,22 +251,11 @@ function setup() {
 
 function draw() {
   for (let i = 0; i < boids.length; i++) {
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, boids[i].r);
   }
 }
 
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    this.velocity = {
-      x: 5,
-      y: 5,
-    };
-  }
-}
+// 省略
 ```
 
 </details>
@@ -356,103 +318,95 @@ function setup() {
 
 function draw() {
   for (let i = 0; i < boids.length; i++) {
-    boids[i].position.x += boids[i].velocity.x;
-    boids[i].position.y += boids[i].velocity.y;
+    boids[i].update()
 
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, boids[i].r);
   }
 }
 
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    this.velocity = {
-      x: 5,
-      y: 5,
-    };
-  }
-}
+// 省略
 ```
 
 </details>
 
-大量の円が流れて行きますね。速度にもランダム性をもたせましょう！ Boid の速度はコンストラクタで定義されていました。
-
-```js
-// 省略
-
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    this.velocity = {
-      x: 5,
-      y: 5,
-    };
-  }
-}
-```
-
-これをランダムにします。
-
-```js
-// 省略
-
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    this.velocity = {
-      x: random(),
-      y: random(),
-    };
-  }
-}
-```
-
-とても遅くなりましたね。これは random()の基本範囲が 0~1 だからです。これだと少し遅すぎるので速度の最大を 5 にしましょう。最大値は`random()`の引数に渡します。
-
-```js
-// 省略
-
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    this.velocity = {
-      x: random(5), // ここを編集
-      y: random(5), // ここを編集
-    };
-  }
-}
-```
-
-いい感じにバラけましたね!
 
 ### ステップ 5 画面の端っこに来たら反対から出現するようにする。
 
-複数の円が 100 個一斉に動かすことはできました。しかし、数秒すると皆画面から消えてしまいます。これではシュミレーションとしては一瞬でつまらないですね。そこで画面端っこにきたら反対側から出現するようにします。
+複数の円が 100 個一斉に動かすことはできました。しかし、数秒すると皆画面から消えてしまいます。これではシュミレーションとしては一瞬でつまらないですね。そこで画面端っこにきたら反対側から出現するようにします。これを`windowLoop`というメソッドにし、`update`から呼び出すことにします。
 
-どうすれば実現できそうですか？一度考えてみてください。
+```js
+class Boid {
+  constructor(x, y) {
+    this.r = 16;
+    this.position = createVector(x, y);
+    this.velocity = p5.Vector.random2D();
+    this.acceleration = createVector(0, 0);
+  }
+
+  update() {
+    this.windowLoop();
+    this.position.add(this.velocity);
+  }
+
+  windowLoop(){
+    // ここに処理を書く
+  }
+}
+
+```
+`windowLoop`の実装を一度考えてみてください。
 
 <details>
   <summary>ヒント</summary>
+
+まずは、状況を整理する。
+上下端にきたらキャンバスの高さの分、Boid の`position.y`を移動させ、左右端にきたらキャンバスの幅の分、Boid の`position.x`を移動させる。
+
+```js
+  windowLoop() {
+    // 画面端にきたら逆側から出現する
+    if (this.position.x >= width) {
+      this.position.x = 0;
+    } 
+    if (this.position.x <= 0) {
+      this.position.x = width;
+    } 
+    if (this.position.y >= height) {
+      this.position.y = 0;
+    } 
+    if (this.position.y <= 0) {
+      this.position.y = height;
+    }
+  }
+```
+
+画面を更新してしばらく眺めてると...
+あれれ、Boidたちが画面端っこにあつまってひっかかってますね。これは、画面右端にきて左にワープしたあと、次のフレームで、画面左端にきてるから画面右端にワープして...と、シーソーをしてしまっているからです。イコールが悪さをしています。イコールを取っ払いましょう。
+
+```js
+  windowLoop() {
+    // 画面端にきたら逆側から出現する
+    if (this.position.x > width) {
+      this.position.x = 0;
+    } 
+    if (this.position.x < 0) {
+      this.position.x = width;
+    } 
+    if (this.position.y > height) {
+      this.position.y = 0;
+    } 
+    if (this.position.y < 0) {
+      this.position.y = height;
+    }
+  }
+```
+
+あとは、円なので半径をを考慮します。
 
 </details>
 
 <details>
   <summary>答え</summary>
-
-`draw`関数のループの中で、上下端にきたらキャンバスの高さの分、Boid の`position.y`を移動させ、左右端にきたらキャンバスの幅の分、Boid の`position.x`を移動させる。
 
 ```js
 let boids; // 鳥の群れ
@@ -475,34 +429,39 @@ function setup() {
 
 function draw(){
   for(let i = 0; i < boids.length; i++){
-    // 画面端にきたら逆側から出現する
-    if (boids[i].position.x >= width) {
-      boids[i].position.x = 0;
-    } else if (boids[i].position.x <= 0) {
-      boids[i].position.x = width;
-    } else if (boids[i].position.y >= height) {
-      boids[i].position.y = 0;
-    } else if (boids[i].position.y <= 0) {
-      boids[i].position.y = height;
-    }
+    boids[i].update();
 
-    // 毎フレーム速度成分を足して移動
-    boids[i].position.x += boids[i].velocity.x;
-    boids[i].position.y += boids[i].velocity.y;
-
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, 16);
   }
 }
 
+
 class Boid {
-  constructor(x, y){
-    this.position = {
-      x: x,
-      y: y
+  constructor(x, y) {
+    this.r = 16;
+    this.position = createVector(x, y);
+    this.velocity = p5.Vector.random2D();
+    this.acceleration = createVector(0, 0);
+  }
+
+  update() {
+    this.windowLoop();
+    this.position.add(this.velocity);
+  }
+
+  windowLoop() {
+    // 画面端にきたら逆側から出現する
+    if (this.position.x < -this.r) {
+      this.position.x = width + this.r
     };
-    this.velocity = {
-      x: random(),
-      y: random(),
+    if (this.position.y < -this.r) {
+      this.position.y = height + this.r;
+    }
+    if (this.position.x > width + this.r) {
+      this.position.x = -this.r;
+    }
+    if (this.position.y > height + this.r) {
+      this.position.y = -this.r;
     }
   }
 }
@@ -514,110 +473,49 @@ class Boid {
 
 ![画面端ループ](/samples//flocking/boids-like-snow.jpeg)
 
-### ステップ6 クラスとして整理する
 
-いま`draw()`の中で、たくさんのBoidの`position`を修正する処理をしています。これをクラスのメソッドとしてまとめましょう。
+### ステップ6 反発力を考慮する
+
+このBoidたちは重なってしまいます。現実では鳥同士が完全にかさなることはありえませんね。そこでBoid同士に反発力を与えて重ならないようにしたいと思います。
+
+そこでBoidクラスに`separate`メソッドを定義しました。`separate`は(自身を含む)Boidの群れ(配列)を受け取り、反発力を計算して、自身の加速度を変化させるメソッドです。
+
+速度を変化させる加速度の概念をコードに反映させるため以下の処理を追加しています。
+
+- `update`メソッド内部で、`this.velocity.add(this.acceleration)`を`this.position.add(this.velocity)`の前に追加しました。
+- `update`メソッド内部で、`this.separate()`を`this.velocity.add(this.acceleration)`の前に追加しました。
+
 
 ```js
-let boids; // 鳥の群れ
-
-function setup() {
-  // フレームレートを24フレーム/秒に設定
-  // frameRate(24);
-
-  // キャンバスの大きさを720x400ピクセルに指定
-  createCanvas(720, 400);
-
-  // 背景色をカラーコード#E0F4FFに指定
-  background("#E0F4FF");
-
-  // x: 300, y:300 の位置でBoidを初期化
-  for(let i = 0; i < 100; i++){
-    boids.push(new Boid(random(width), random(height)));
-  }
-}
 
 function draw(){
   for(let i = 0; i < boids.length; i++){
+    // 引数のboidsの配列をまるごと渡す。
+    boids[i].update(boids);
 
-    // positionを変化させる処理をまとめる。
-    boids[i].update();
-
-    circle(boids[i].position.x, boids[i].position.y, 30);
+    circle(boids[i].position.x, boids[i].position.y, 16);
   }
 }
 
 class Boid {
-  constructor(x, y){
-    this.position = {
-      x: x,
-      y: y
-    };
-    this.velocity = {
-      x: random(),
-      y: random(),
-    }
+  constructor(x, y) {
+    this.position = createVector(x, y);
+    this.velocity = p5.Vector.random2D();
+    this.acceleration = createVector(0, 0);
   }
 
-  /**
-   * 画面端ループ
-   */
-  windowLoop() {
-    // 画面端にきたら逆側から出現する
-    if (this.position.x >= width) {
-      this.position.x = 0;
-    } else if (this.position.x <= 0) {
-      this.position.x = width;
-    } else if (this.position.y >= height) {
-      this.position.y = 0;
-    } else if (this.position.y <= 0) {
-      this.position.y = height;
-    }
-  }
-
-  /**
-   * 速度成分を足す
-   */
-  plusVelocity(){
-    // 毎フレーム速度成分を足して移動
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-  }
-
-  update(){
+  // 引数にboidsを追加
+  update(boids) {
     this.windowLoop();
-    this.plusVelocity();
-  }
-}
-```
-
-少しスッキリしましたね。このようにクラスは自分自身の値を変えるのがとても得意です。こうすることで、Boidに関するコードが様々な場所にバラけずにまとまりが良くなります。
-
-### ステップ7 他のBoidと相互作用をする。反発力編
-
-いまはまだ、この Boidたちは他のBoidと相互作用していません。各々が独自に動いているだけです。しかし実際の鳥の群れは他の鳥と相互作用しているはずです。
-
-例えば、今はBoid同士が重なってしまっていますが、現実では鳥同士が完全にかさなることはありえませんね。そこでBoid同士に反発力を与えます。
-
-そこでBoidクラスに`separate`メソッドを定義しました。
-
-```js
-
-class Boid {
-  constructor(x, y){
-    this.position = {
-      x: x,
-      y: y
-    };
-    this.velocity = {
-      x: random(),
-      y: random(),
-    }
+    // 個体が重ならないように加速度を変化させる。
+    // 引数のboidsはupdateの引数から渡す。
+    this.separate(boids);
+    // 速度を変化させる
+    this.velocity.add(this.acceleration);
+    // 位置を変化させる 
+    this.position.add(this.velocity);
   }
 
-  /**
-   * 画面端ループ
-   */
   windowLoop() {
     // 画面端にきたら逆側から出現する
     if (this.position.x >= width) {
@@ -632,25 +530,12 @@ class Boid {
   }
 
   /**
-   * 速度成分を足す
-   */
-  plusVelocity(){
-    // 毎フレーム速度成分を足して移動
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-  }
-
-  /**
-   * 反発力を与える
-   * @param boids - 他のboidの群れを引数に取る
+   * 加速度を変化させる
+   * 個体同士が重ならないようにする
+   * 引数 boids - 自身を含むBoidの配列
    */
   separate(boids){
-    // 自分のpositionを変化させる
-  }
-
-  update(){
-    this.windowLoop();
-    this.plusVelocity();
+    // ここに処理を書く
   }
 }
 ```
@@ -673,176 +558,45 @@ class Boid {
 <details>
   <summary>ヒント2</summary>
 
-  速度成分を変える力のことを加速度と言います。Boidクラスを以下のように書き換えてください。
-
-  ```js
-  class Boid {
-    constructor(x, y){
-      this.position = {
-        x: x,
-        y: y
-      };
-      // 速度
-      this.velocity = {
-        x: random(),
-        y: random(),
-      }
-      // 加速度
-      this.acceleration = {
-        x: -0.1,
-        y: -0.1,
-      }
-    }
-
-    /**
-     * 画面端ループ
-     */
-    windowLoop() {
-      // 画面端にきたら逆側から出現する
-      if (this.position.x >= width) {
-        this.position.x = 0;
-      } else if (this.position.x <= 0) {
-        this.position.x = width;
-      } else if (this.position.y >= height) {
-        this.position.y = 0;
-      } else if (this.position.y <= 0) {
-        this.position.y = height;
-      }
-    }
-
-    /**
-     * 速度成分を足す
-     */
-    plusVelocity(){
-      // 毎フレーム速度成分を足して移動
-      this.position.x += this.velocity.x;
-      this.position.y += this.velocity.y;
-    }
-
-    /**
-     * 反発力を与える
-     * @param boids - 他のboidの群れを引数に取る
-     */
-    separate(boids){
-      // 自分のpositionを変化させる
-    }
-
-    /**
-     * 速度成分を変化させる。
-     */
-    plusAcceleration(){
-      this.velocity.x += this.acceleration.x;
-      this.velocity.y += this.acceleration.y;
-    }
-
-    update(){
-      this.windowLoop();
-      this.plusAcceleration();
-      this.plusVelocity();
-    }
-  }
-  ```
+  速度成分を変える力のことを加速度と言います。
 
 　　 そして、コンストラクタないの加速度に適当な値を入れてみましょう。例えば、左上方向に方向に風が吹いているとします。
   ```js
-　　 this.acceleration = {
-    x: -0.1, // 左方向に引っ張られる力
-    y: -0.1, // 上方向に引っ張られる力
-  }
+　　// 左上方向に引っ張られる力
+　　 this.acceleration = createVector(-0.1, -0.1);
   ```
 
-  すごいことになりましたね笑。一旦加速度を0に戻して、最大速度を超えないように設定しましょう。
+  これで画面を更新すると白い円たちが左上に流れていきます。このコードでは加速度は毎フレームごとに永遠足されていくので、最終的には速度が無限になってしまいますが、実際は空気摩擦などがあり、もう少し加速が遅くなるはずです。今回は速度にリミットをかけようと思います。速度が3より大きくならないようにします。`update`を次のように変更します。
+
+  p5jsのベクトルには`limit`というメソッドがあり、これでベクトルの大きさを引数の値まで「刈り取る」ことができます。便利ですね！
 
   ```js
   class Boid {
+
     constructor(x, y){
-      this.position = {
-        x: x,
-        y: y
-      };
-      // 速度
-      this.velocity = {
-        x: random(),
-        y: random(),
-      }
-      // 加速度
-      this.acceleration = {
-        x: 0,
-        y: 0,
-      }
-      // 最大速度
-      this.maxVelocity = {
-        x: 1,
-        x: 1,
-      }
+      // 省略
+      this.maxSpeed = 3
     }
 
-    /**
-     * 画面端ループ
-     */
-    windowLoop() {
-      // 画面端にきたら逆側から出現する
-      if (this.position.x >= width) {
-        this.position.x = 0;
-      } else if (this.position.x <= 0) {
-        this.position.x = width;
-      } else if (this.position.y >= height) {
-        this.position.y = 0;
-      } else if (this.position.y <= 0) {
-        this.position.y = height;
-      }
-    }
-
-    /**
-     * 速度成分を足す
-     */
-    plusVelocity(){
-      // 毎フレーム速度成分を足して移動
-      this.position.x += this.velocity.x;
-      this.position.y += this.velocity.y;
-    }
-
-    /**
-     * 反発力を与える
-     * @param boids - 他のboidの群れを引数に取る
-     */
-    separate(boids){
-      // 自分のpositionを変化させる
-    }
-
-    /**
-     * 速度成分を変化させる。
-     */
-    plusAcceleration(){
-      this.velocity.x += this.acceleration.x;
-      this.velocity.y += this.acceleration.y;
-      // 最大速度を超えないようにする
-      if(this.velocity.x > this.maxVelocity.x) {
-        this.velocity.x = this.maxVelocity.x;
-      }
-      if(this.velocity.y > this.maxVelocity.y) {
-        this.velocity.y = this.maxVelocity.y;
-      }
-    }
-
-    update(){
+    update() {
       this.windowLoop();
-      this.plusAcceleration();
-      this.plusVelocity();
+      // 個体が重ならないように加速度を変化させる。
+      this.separate();
+      // 速度を変化させる
+      this.velocity.add(this.acceleration);
+      // 最大速度を3にする。
+      this.velocity.limit(this.maxSpeed);
+      // 位置を変化させる 
+      this.position.add(this.velocity);
     }
-  }
   ```
 
-  これで、加速度を設定しても安心です。
+加速度がわかったので、加速度の初期化をもとの0に戻しておきましょう。
 
-　　　　```js
-　　 this.acceleration = {
-    x: -0.1, // 左方向に引っ張られる力
-    y: -0.1, // 上方向に引っ張られる力
-  }
-  ```
-
-  これでも、やっぱり目がチカチカしますね笑。一旦加速度は0に戻しておきましょう。
+コンストラクタ内で、
+```js
+this.acceleration = createVector(0,0);
+```
 </details>
 
 <details>
@@ -862,6 +616,13 @@ class Boid {
 
 要は、x座標の差分の2乗と、y座標の差分の2乗を足して、平方根を取ったものです。
 
+p5jsのベクトルの場合、`p5.Vector.dist(p1, p2)`を使えば２点間の距離を計算することができます。
+
+```js
+//　２点間の距離
+const d = p5.Vector.dist(自分の座標ベクトル, 相手の座標ベクトル);
+```
+
 ```js
 
 class Boid{
@@ -875,7 +636,7 @@ class Boid{
     // 他のすべてのboidをチェック
     for(let i = 0; i < boids.length; i++){
       // 距離を計算する
-      const d = Math.sqrt((boids[i].position.x - this.position.x)**2 + (boids[i].position.y - this.position.y)**2)
+      const d = p5.Vector.dist(this.position, boids[i].position);
 
       // 距離が近ければ、逆方向の加速度を加える
       // d === 0 は自分自身なので除く 
@@ -898,29 +659,73 @@ class Boid{
       // }
 ```
 
-距離が近ければ、という条件に対して、プログラムには具体的な数値を指示しなければいけません。とりあえず円の半径が30ピクセルなので、60ピクセル(２つの円がちょうど接する距離)を与えてみます。
+距離が近ければ、という条件に対して、プログラムには具体的な数値を指示しなければいけません。そこで`neighborDistance`(ご近所との距離)という自身の半径に3ピクセル足した範囲内を対象にしようと思います。
+```js
+
+  separate(boids) {
+    const neighborDistance = this.r + 3;
+    // 他のすべてのboidをチェック
+    for (let i = 0; i < boids.length; i++) {
+      // 距離を計算する
+      const d = p5.Vector.dist(this.position, boids[i].position);
+
+      // 距離が近ければ、逆方向の加速度を加える
+      if (d < neighborDistance) {
+        /// ???
+      }
+    }
+  }
+```
+
+また、引数のboidsにはには自分自身も含まれているため、自分を除外する処理が必要です。この場合距離が0のものを実質自分として除外することにします。
 ```js
       // 距離が近ければ、逆方向の加速度を加える
       // d === 0 は自分自身なので除く 
-      if(d !== 0 && d < 60){
+      if(d !==0 && d < neighborDistance){
         // ???
       }
 ```
 
-また、引数のboidsにはには自分自身も含まれているため、自分を除外する処理が必要です。この場合距離が0のものを実質自分として除外することにします。ｘ
+```js
+/*
+ * 反発力を与える
+ * @param boids - 他のboidの群れを引数に取る
+ */
+  separate(boids){
+  　　　　const neighborDistance = this.r + 3;
 
-次に、逆方向の加速度を計算するにはどうしたらよいでしょうか？
+    // 他のすべてのboidをチェック
+    for(let i = 0; i < boids.length; i++){
+      // 距離を計算する
+      const d = p5.Vector.dist(this.position, boids[i].position);
+
+      // 距離が近ければ、逆方向の加速度を加える
+      // d === 0 は自分自身なので除く 
+      if(d !== 0 && d < neighborDistance){
+        // ???
+      }
+    }
+  }
+```
+
+逆方向の加速度を与えるにはどうすればよいでしょうか？
+
+次のヒントに続く...
 
 </details>
 
 <details>
 <summary>ヒント4</summary>
 
-逆方向の加速度を計算するには、単純に２点間の差分をとればよいです。これをより詳しく理解するにはベクトルという概念を学ぶ必要がありますが、以下の図をみれば直感的にわかるかもしれません。
+逆方向の加速度は、自分の位置ベクトルと相手の位置ベクトルの差がとなります。相手から自分に向かって反発力が発生している感じですね。
 
 ![反発ベクトル](/samples//flocking/separate.jpg)
 
-ということで、反発力の方向は単純に２つのBoidのx座標とy座標の差分を取ることでわかります。
+p5jsでは`p5.Vector.sub`をつかって２点間のベクトルの差分ベクトルを計算できます。
+
+```js
+const 反発力ベクトル = p5.Vector.sub(自分の位置ベクトル, 相手の位置ベクトル);
+```
 
 ```js
 
@@ -935,28 +740,17 @@ class Boid{
     // 他のすべてのboidをチェック
     for(let i = 0; i < boids.length; i++){
       // 距離を計算する
-      const d = Math.sqrt((boids[i].position.x - this.position.x)**2 + (boids[i].position.y - this.position.y)**2)
+      const d = p5.Vector.dist(this.position, boids[i].position);
 
       // 距離が近ければ、逆方向の加速度を加える
       // ２つの円が接する60ピクセルいないで
       // d === 0 は自分自身なので除く
-      if(d !== 0 && d < 60){
+      if(d !== 0 && d < 2*this.r){
         // 反発ベクトルの向きの計算
-        const separatePower = {
-          x: 0,
-          y: 0
-        } 
-
-        // 仮に相手が右側にいた場合、反発力はマイナス方向になるはず。
-        // その場合、相手 - 自分だと 値がプラスになるから、
-        // 自分 - 相手 が値がマイナスになり正解
-        // これは一般的に相手がどの位置にいてもいえることなので、自分 - 相手で反発方向を取得できる
-        separatePower.x = this.position.x - boids[i].position.x
-        separatePower.y = this.position.y - boids[i].position.y
+        const separatePower = p5.Vector.sub(this.position, boids[i].position);
 
         // 加速度を更新する
-        this.acceleration.x = separatePower.x;
-        this.acceleration.y = separatePower.y;
+        this.acceleration.add(separatePower);
       }
     }
   }
@@ -965,297 +759,52 @@ class Boid{
 }
 ```
 
-さて、`separate`メソッドにboidsを渡してあげるために、いろいろと更新する必要があります。
 
-まずは`update`で`separate`メソッドを`plusAcceleration`の前に追加します。これで速度に加速度を加算するまえに、反発力を反映させることができるようになりました。そして`separate`メソッドに`boids`を渡してあげますが、そのためにはそもそも`update`メソッドに`boids`を渡してあげないといけませんね。
-
-```js
-
-  update(boids) {
-    this.windowLoop();
-    // 新しく追加
-    this.separate(boids);
-    this.plusAcceleration();
-    this.plusVelocity();
-
-    this.acceleration = {
-      x: 0,
-      y: 0,
-    };
-  }
-```
-
-`draw`関数で`update`を呼び出している箇所で、`update`の引数に`boids`そのものを渡してあげます。
-
-```js
-function draw(){
-  for(let i = 0; i < boids.length; i++){
-
-    // positionを変化させる処理をまとめる。
-    // boidsを渡す
-    boids[i].update(boids);
-
-    circle(boids[i].position.x, boids[i].position.y, 30);
-  }
-}
-
-```
-
-これで一度実行してみましょう。多分すごいことになります。
+これで一度実行してみましょう。重ならないように反発していますが、つねにマックススピードで動いていますね。
 
 なぜなら、加速度が半永久的に速度に加算されていっているからです。
-基本的に重力や風がない限り加速度は永遠に発生しないはずです。ほかのBoidから十分な距離があれば反発力は発生しません。そこで、加速度を`update`ないで`position`の計算をしたあとで、0にリセットしたいと思います。
+基本的に重力や風がない限り加速度は永遠に発生しないはずです。ほかのBoidから十分な距離があれば反発力は発生しません。そこで、加速度を`update`ないで`position`の計算をしたあとで、0にリセットしたいと思います。`mult()`はベクトルを引数の数値分掛け算して矢印を伸ばしたり短くしたりします。multiple(掛ける)の略です。
 
 ```js
 
   update(boids) {
     this.windowLoop();
     this.separate(boids);
-    this.plusAcceleration();
-    this.plusVelocity();
+    this.velocity.add(this.acceleration);
+        // 最大速度を3にする。
+    this.velocity.limit(this.maxSpeed);
+    this.position.add(this.velocity);
 
     // 加速度を毎フレームごとに0にリセット
-    this.acceleration = {
-      x: 0,
-      y: 0,
-    };
+    // 0をかけることで0にリセットする
+    this.acceleration.mult(0)
   }
 ```
 
-これでもかなりのスピードです。実は先程のロジックには欠陥があります。
-
-具体的にはここです。
-
-```js
-  // 仮に相手が右側にいた場合、反発力はマイナス方向になるはず。
-  // その場合、相手 - 自分だと 値がプラスになるから、
-  // 自分 - 相手 が値がマイナスになり正解
-  // これは一般的に相手がどの位置にいてもいえることなので、自分 - 相手で反発方向を取得できる
-  separatePower.x = this.position.x - boids[i].position.x
-  separatePower.y = this.position.y - boids[i].position.y
-
-  // 加速度を更新する
-  this.acceleration.x = separatePower.x;
-  this.acceleration.y = separatePower.y;
-```
-
-２つの欠陥があります。
-- 60ピクセルいないにいないに存在するすべてのBoidに対して、反発力を計算しているが、結局一番最後のやつで上書きされてしまっている。本当であれば、60ピクセルいないにすべてのBoidの反発力を計算して、合計しなければいけない。それで最終的な反発力の向きが決まる(ベクトルの合成)。
-- 反発力を単に2点間の距離として加速度を更新しているが、これだと加速度の値が余裕で30とかいってしまう。毎フレームごとに速度が30増えればかなりのスピードになってしまうため現実的ではない。加速度の値は0.1あたりに抑えとく。
-
-これを修正すると次のようになります。
+これでもスピードは徐々にあがり落ちません。加速度は反発力が発生しない限り0ですが、一度上がった速度を減速させる力がないからです。しかし本来であれば、上がったスピードは他のBoidにぶつかれば減速するはずです。これをコードで再現しましょう！
 
 ```js
 
   /**
-   * 反発力を与える
-   * @param boids - 他のboidの群れを引数に取る
-   */
-  separate(boids) {
-    // 反発力(ベクトル)
-    const separatePower = {
-      x: 0,
-      y: 0,
-    };
-
+ * 反発力を与える
+ * @param boids - 他のboidの群れを引数に取る
+ */
+  separate(boids){
     // 他のすべてのboidをチェック
-    for (let i = 0; i < boids.length; i++) {
+    for(let i = 0; i < boids.length; i++){
       // 距離を計算する
-      const d = Math.sqrt(
-        (boids[i].position.x - this.position.x) ** 2 +
-          (boids[i].position.y - this.position.y) ** 2
-      );
+      const d = p5.Vector.dist(this.position, boids[i].position);
 
       // 距離が近ければ、逆方向の加速度を加える
       // ２つの円が接する60ピクセルいないで
       // d === 0 は自分自身なので除く
-      if (d !== 0 && d < 60) {
-        // 反発力をどんどん加算していく(ベクトルの合成)
-        separatePower.x += this.position.x - boids[i].position.x;
-        separatePower.y += this.position.y - boids[i].position.y;
+      if(d !== 0 && d < 2*this.r){
+        // 反発ベクトルの向きの計算
+        const separatePower = p5.Vector.sub(this.position, boids[i].position);
+
+        // 加速度を更新する
+        this.acceleration.add(separatePower);
       }
     }
-
-    // 反発力を加速度に反映させたいが、大きさがだいたい0.1ぐらいになるように調整する。
-    // そのために反発力の大きさを計算して、その値でそれぞれのx成分、y成分を割ると(正規化)、だいたい1以内になる。
-    const separatePowerSize = Math.sqrt(
-      separatePower.x ** 2 + separatePower.y ** 2
-    );
-
-    // 0でわるのを防ぐ
-    if (separatePowerSize > 0) {
-      // separatePowerSizeでわれば大体1以下になる
-      // それをさらに10でわれば大体0.1以下になる
-      separatePower.x = separatePower.x / separatePowerSize / 10;
-      separatePower.y = separatePower.y / separatePowerSize / 10;
-    }
-
-    // 加速度に反映させる
-    this.acceleration.x = separatePower.x;
-    this.acceleration.y = separatePower.y;
   }
 ```
-
-これで異常加速するのを防ぐことができました。ただまだ早いので初期速度を5から1ぐらいに落としましょう。
-
-
-</details>
-
-<details>
-<summary>
-答え
-</summary>
-
-```js
-// 変数の宣言
-let boids;
-
-function setup() {
-  // フレームレートを24フレーム/秒に設定
-  // frameRate(24);
-
-  // キャンバスの大きさを720x400ピクセルに指定
-  createCanvas(720, 400);
-
-  // 背景色をカラーコード#E0F4FFに指定
-  background("#E0F4FF");
-
-  boids = [];
-  // x: 300, y:300 の位置でBoidを初期化
-  for (let i = 0; i < 100; i++) {
-    boids.push(new Boid(random(width), random(height)));
-  }
-}
-
-function draw() {
-  // 背景色で塗りつぶし
-  background("#E0F4FF");
-
-  for (let i = 0; i < boids.length; i++) {
-    boids[i].update(boids);
-
-    circle(boids[i].position.x, boids[i].position.y, 30);
-  }
-}
-class Boid {
-  constructor(x, y) {
-    this.position = {
-      x: x,
-      y: y,
-    };
-    // 速度
-    this.velocity = {
-      x: random(1),
-      y: random(1),
-    };
-    // 加速度
-    this.acceleration = {
-      x: -0.1,
-      y: -0.1,
-    };
-    // 最大速度
-    this.maxVelocity = {
-      x: 1,
-      x: 1,
-    };
-  }
-
-  /**
-   * 画面端ループ
-   */
-  windowLoop() {
-    // 画面端にきたら逆側から出現する
-    if (this.position.x >= width) {
-      this.position.x = 0;
-    } else if (this.position.x <= 0) {
-      this.position.x = width;
-    } else if (this.position.y >= height) {
-      this.position.y = 0;
-    } else if (this.position.y <= 0) {
-      this.position.y = height;
-    }
-  }
-
-  /**
-   * 速度成分を足す
-   */
-  plusVelocity() {
-    // 毎フレーム速度成分を足して移動
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-  }
-
-  /**
-   * 反発力を与える
-   * @param boids - 他のboidの群れを引数に取る
-   */
-  separate(boids) {
-    // 反発力(ベクトル)
-    const separatePower = {
-      x: 0,
-      y: 0,
-    };
-
-    // 他のすべてのboidをチェック
-    for (let i = 0; i < boids.length; i++) {
-      // 距離を計算する
-      const d = Math.sqrt(
-        (boids[i].position.x - this.position.x) ** 2 +
-          (boids[i].position.y - this.position.y) ** 2
-      );
-
-      // 距離が近ければ、逆方向の加速度を加える
-      // とりあえず50ピクセルいない？
-      // d === 0 は自分自身なので除く
-      if (d !== 0 && d < 60) {
-        // 反発力をどんどん加算していく(ベクトルの合成)
-        separatePower.x += this.position.x - boids[i].position.x;
-        separatePower.y += this.position.y - boids[i].position.y;
-      }
-    }
-
-    // 反発力を加速度に反映させたいが、大きさがだいたい0.1ぐらいになるように調整する。
-    // そのために反発力の大きさを計算して、その値でそれぞれのx成分、y成分を割ると(正規化)、だいたい1以内になる。
-    const separatePowerSize = Math.sqrt(
-      separatePower.x ** 2 + separatePower.y ** 2
-    );
-
-    if (separatePowerSize > 0) {
-      separatePower.x = separatePower.x / separatePowerSize / 10;
-      separatePower.y = separatePower.y / separatePowerSize / 10;
-    }
-
-    // 加速度に反映させる
-    this.acceleration.x = separatePower.x;
-    this.acceleration.y = separatePower.y;
-  }
-
-  /**
-   * 速度成分を変化させる。
-   */
-  plusAcceleration() {
-    this.velocity.x += this.acceleration.x;
-    this.velocity.y += this.acceleration.y;
-    // 最大速度を超えないようにする
-    if (this.velocity.x > this.maxVelocity.x) {
-      this.velocity.x = this.maxVelocity.x;
-    }
-    if (this.velocity.y > this.maxVelocity.y) {
-      this.velocity.y = this.maxVelocity.y;
-    }
-  }
-
-  update(boids) {
-    this.windowLoop();
-    this.separate(boids);
-    this.plusAcceleration();
-    this.plusVelocity();
-
-    this.acceleration = {
-      x: 0,
-      y: 0,
-    };
-  }
-}
-```
-</details>
