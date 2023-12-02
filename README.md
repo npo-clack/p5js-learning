@@ -3,6 +3,23 @@ p5jsを勉強するコンテンツ。
 このコースは魅力的かつダイナミックな動きを実現できるp5jsを学ぶコースです。
 週一のTR+だけでなく家庭学習前提のコースとなるため、時間が確保できる人のみ選択してください。
 
+## この教材で学べること
+p5jsというクリエイティブコーディング用のライブラリの使い方を学び、プログラミングをつかった強力な表現力をみにつける。
+
+### [ピクセルアート](https://npo-clack.github.io/p5js-learning/samples/pixel-art/complete/)
+ボード系の考え方を身につける。ポチポチで色を変える。
+<img width="734" alt="Screen Shot 0005-12-02 at 12 04 31" src="https://github.com/npo-clack/p5js-learning/assets/25113191/33fb77ed-6429-4024-8e25-fcc9ac1dc1e7">
+
+### [パーティクル](https://npo-clack.github.io/p5js-learning/samples/particle/complete/)
+パーティクルはクリエイティブコーディングの基本。大量のパーティクルを制御する方法を学ぶ。応用すれば宇宙の星空を再現したり、雨や雪を表現したりできる。クラスを学ぶ。
+<img width="729" alt="Screen Shot 0005-12-02 at 12 09 24" src="https://github.com/npo-clack/p5js-learning/assets/25113191/f58f9b11-54eb-4c6f-9cbc-829c444ad251">
+
+### [ライフゲーム](https://npo-clack.github.io/p5js-learning/samples/gameoflife/complete/)
+誕生、生存、過疎、過密の４つのルールを与えて、人工生命をシュミレーションする。ピクセルアートを完全に理解できる人のみ選択可能。
+<img width="730" src="https://github.com/npo-clack/p5js-learning/blob/main/samples/gameoflife/images/lifegame.gif">
+
+## コースの内容
+
 コースは「学習」と「エクササイズ」に別れています。「エクササイズ」はコードを提出してください。
 
 通常
