@@ -8,15 +8,24 @@ p5jsというクリエイティブコーディング用のライブラリの使�
 
 ### [ピクセルアート](https://npo-clack.github.io/p5js-learning/samples/pixel-art/complete/)
 ボード系の考え方を身につける。ポチポチで色を変える。
+
+<p align="center"> 
 <img width="734" alt="Screen Shot 0005-12-02 at 12 04 31" src="https://github.com/npo-clack/p5js-learning/assets/25113191/33fb77ed-6429-4024-8e25-fcc9ac1dc1e7">
+</p>
 
 ### [パーティクル](https://npo-clack.github.io/p5js-learning/samples/particle/complete/)
 パーティクルはクリエイティブコーディングの基本。大量のパーティクルを制御する方法を学ぶ。応用すれば宇宙の星空を再現したり、雨や雪を表現したりできる。クラスを学ぶ。
+
+<p align="center"> 
 <img width="729" alt="Screen Shot 0005-12-02 at 12 09 24" src="https://github.com/npo-clack/p5js-learning/assets/25113191/f58f9b11-54eb-4c6f-9cbc-829c444ad251">
+</p>
 
 ### [ライフゲーム](https://npo-clack.github.io/p5js-learning/samples/gameoflife/complete/)
 誕生、生存、過疎、過密の４つのルールを与えて、人工生命をシュミレーションする。ピクセルアートを完全に理解できる人のみ選択可能。
+
+<p align="center"> 
 <img width="730" src="https://github.com/npo-clack/p5js-learning/blob/main/samples/gameoflife/images/lifegame.gif">
+</p>
 
 ## コースの内容
 
