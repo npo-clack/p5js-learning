@@ -29,7 +29,7 @@ p5jsというクリエイティブコーディング用のライブラリの使�
 
 ## コースの内容
 
-コースは「学習」と「エクササイズ」に別れています。「エクササイズ」はコードを提出してください。
+初回はテーマ決め、zennで基礎を学習し、サンプルアプリを模写、そのあと自作アプリorサンプルのカスタマイズを行う。
 
 通常
 | week | コンテンツ                                 |
@@ -54,12 +54,9 @@ p5jsというクリエイティブコーディング用のライブラリの使�
 サンプルアプリ
 - パーティクル
 - ピクセルアート
-- お絵かき
 
 応用サンプルアプリ
-- スネークゲーム(ピクセルアートをクリアした人のみ)
 - ゲームオブライフ(ピクセルアートをクリアした人のみ)
-- 鳥の群衆シュミレーションBoids(パーティクルをクリアした人のみ)
 
 ## Week2 zenn本のチャプタ-5まで終わらせる。終わらなければ家でやる
 
@@ -67,7 +64,8 @@ p5jsというクリエイティブコーディング用のライブラリの使�
 https://zenn.dev/ojk/books/intro-to-p5js
 
 エクササイズ
-p5jsを使って簡単な絵を描きましょう。
+p5jsを使って簡単な絵を描きましょう。[オンラインエディタ](https://editor.p5js.org/)を使ってください。
+コードは、`exercises/week2/your-code.js`に貼り付けてください。
 
 ## Week3 zenn本のチャプタ-9まで終わらせる。終わらなければ家でやる
 
@@ -77,27 +75,51 @@ https://zenn.dev/ojk/books/intro-to-p5js
 エクササイズ
 キーボードの矢印キーを入力すると、四角が移動するプログラミムを書いてみましょう。ChatGPTに相談してもよいですが、まずは自分で手を動かして悩んだほうが、覚えやすいです。
 
+[オンラインエディタ](https://editor.p5js.org/)を使ってください。
+コードは、`exercises/week３/your-code.js`に貼り付けてください。
+
 ## Week4 p5jsをHTMLに統合してWebブラウザ上でみれるようにする
 今まではオンラインのエディタを使ってp5jsを書いていました。オンラインエディタの内容はアカウント登録すれば保存でき他の人に見せることができます。
 今回はアカウント登録せずに、他の人に見せることができるように、p5jsとHTMLを統合する方法を学びます。
 
 学習
+`samples/skeleton`フォルダを見てください。これがp5jsを利用するための最小構成です。`index.html`の`head`で`p5.min.js`ファイルを読み込みその後に`my-p5.js`を読み込んでいます。順番が大事です。なぜなら`my-p5.js`はp5jsのコードに依存するため、前もって読み込まれていなければいけないからです。
+
+```index.html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- p5jsのライブラリ -->
+    <script src="p5.min.js"></script>
+    <!-- 自分のコード -->
+    <script src="my-p5.js"></script>
+</head>
+<body>
+    <!-- canvasはp5jsが作成してくれる -->
+</body>
+</html>
+```
+
+`p5.min.js`はp5jsの本体コードを圧縮したものです。読めなくて大丈夫ですが、これがp5jsのさまざまな機能を提供してくれていることを知っておいてください。
+
+`my-p5.js`は自分たちのコードを書く場所です。ここまで理解したらエクササイズに進みましょう！
 
 エクササイズ1
-p5jsのライブラリの他に`index.html`ファイルと`main.js`を自作して、Week3のエクササイズを再現してください。
+`exercises/week4`配下に`index.html`ファイルと`my-p5.js`を自作して、Week3のエクササイズを再現してください。p5jsのライブラリはそのフォルダ直下にある`p5.min.js`を利用してください。
 
-エクササイズ２
+エクササイズ２(余裕のある人だけ)
 エクササイズ１で作ったものを、GitHub Pagesにホスティングしてください。
 
 ## Week5~Week6 サンプルアプリの実装
 
 学習
 サンプルアプリ
+- ピクセルアート
 - パーティクル
 - ゲームオブライフ
-- お絵かき
-- アート
-- フォース(物理的な力)
 
 エクササイズ
 サンプルアプリに自分なりのカスタマイズをしてください。どんなに小さなカスタマイズでもOK!
@@ -125,8 +147,12 @@ https://p5js.org/examples/
 https://www.team-lab.com/recruit/fresh/product_engineer/
 
 HTML5の機能と組み合わせれば可能性は無限大？
-(p5.js のキャンバスにパワポの画面を取り込む（Screen Capture API を活用）)[https://protopedia.net/prototype/2804]
-(ブラウザ上で録音できるツールをflask + recorder.js + p5.js on TypeScript で作る)[https://www.atsuya.xyz/blog/ts-p5-webapp]
-(発した言葉の中にGとWがあれば祝福してくれるブラウザアプリをブラウザのみで作ってみた)[https://zenn.dev/tkyko13/articles/2c64f53c06e713]
-(Web Serial API を利用できる p5.js用のライブラリ「p5.web-serial」で micro:bit とのシリアル通信（p5.js Web Editor・MakeCodeを利用）)[https://qiita.com/youtoy/items/1abd620bd5cbe531fe01]
+
+[p5.js のキャンバスにパワポの画面を取り込む（Screen Capture API を活用）](https://protopedia.net/prototype/2804)
+
+[ブラウザ上で録音できるツールをflask + recorder.js + p5.js on TypeScript で作る](https://www.atsuya.xyz/blog/ts-p5-webapp)
+
+[発した言葉の中にGとWがあれば祝福してくれるブラウザアプリをブラウザのみで作ってみた](https://zenn.dev/tkyko13/articles/2c64f53c06e713)
+
+[Web Serial API を利用できる p5.js用のライブラリ「p5.web-serial」で micro:bit とのシリアル通信（p5.js Web Editor・MakeCodeを利用）](https://qiita.com/youtoy/items/1abd620bd5cbe531fe01)
 
