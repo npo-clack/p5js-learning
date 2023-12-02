@@ -11,4 +11,6 @@ function setup() {
   background("#E0F4FF");
 }
 
-function draw() {}
+function draw() {
+  rect(100, 100, 50);
+}
